@@ -1,0 +1,86 @@
+local speed = 500
+function init(self)
+	msg.post("#","acquire_input_focus")
+	self.player = nil
+
+	self.fire_rate = 5
+	self.fire_timer = 5
+	self.gun_pos = go.get_position("gun")
+	self.direction = vmath.vector3()
+end
+
+
+function update(self, dt)
+	-- Check if player exists
+	if not self.player then
+		-- Try to find the player game object
+		self.player = go.get_id("Player")
+	else
+		
+		self.player_pos = go.get_position(self.player) 
+
+		self.fire_timer = self.fire_timer - dt
+
+		-- Check if fire button is pressed and fire rate allows
+		
+
+		go.set_position(self.player_pos+vmath.vector3(-5, -30, 1))
+	end
+	
+	self.gun_pos = go.get_position()
+end
+function on_input(self, action_id, action)
+	if self.fire_timer <= 0 and action_id == hash("fire") then
+		if action.pressed then
+			-- Get the player's position
+			local gun_pos = go.get_position()
+			sound.play("#shoot")
+			-- Spawn a bullet slightly above the player
+			local bullet_pos = vmath.vector3(gun_pos.x+20, gun_pos.y-12, gun_pos.z)
+			local bullet_id = factory.create("#bullet_factory", bullet_pos)
+
+			-- Calculate the distance the bullet should travel
+			local distance = 1000 -- in pixels
+			local duration = distance / speed -- time in seconds to travel the full distance
+
+			-- Animate the bullet's movement
+			local to = vmath.vector3(bullet_pos.x, bullet_pos.y , bullet_pos.z)+ self.direction*speed
+		
+			go.animate(bullet_id, "position.y", go.PLAYBACK_ONCE_FORWARD, to.y, go.EASING_LINEAR,duration, 0,function ()
+				go.delete(bullet_id)
+			end)
+			go.animate(bullet_id, "position.x", go.PLAYBACK_ONCE_FORWARD, to.x, go.EASING_LINEAR,duration, 0,function ()
+				go.delete(bullet_id)
+			end)
+		end
+	end
+	if action.x and action.y then
+	
+		
+		-- Get the mouse position in screen space
+		local mouse_pos = vmath.vector3(action.x, action.y, 0)
+
+	
+		-- Get the position of the gun
+		local gun_pos = go.get_position()
+
+		-- Calculate the direction vector from the gun to the mouse position
+		self.direction = vmath.normalize(mouse_pos - gun_pos)
+
+		-- Calculate the rotation angle in radians
+		local rotation_angle = math.atan2(self.direction.y, self.direction.x)
+
+		-- Convert the angle to degrees
+		local player_pos = go.get_position("Player")
+		local rotation = vmath.quat_rotation_z(rotation_angle)
+		-- 
+		-- Set the rotation of the gun
+		go.set_rotation(rotation)
+		
+
+	
+	end	
+end
+
+
+

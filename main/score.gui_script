@@ -1,0 +1,16 @@
+local score = 0
+local health = 3
+function on_message(self, message_id, message, sender)
+	
+	if message_id == hash("destroyed") then
+		score = score +10
+		print(message_id)
+		gui.set_text(gui.get_node("score"),"Score:"..score)
+	end
+	if message_id == hash("health_reduce") then
+		health = health -1
+		print(message_id)
+		gui.set_text(gui.get_node("lives"),"x"..health)
+	end
+end
+
